@@ -1,0 +1,6 @@
+authors = ["Sebastian Pech <sebastian.pech@me.com>"]
+name = "StringArrayEditor"
+uuid = "9ac07dbc-a56c-11e8-2053-773943ca4811"
+version = "0.1.0"
+
+[deps]
