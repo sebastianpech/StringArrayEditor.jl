@@ -37,7 +37,7 @@ function Line(f::File,r::Regex;
         _after = parseSpecifier(f,after,Val{:after}())
     end
 
-    _after == nothing && error("After was not found in the file")
+    _after == nothing && error("After ($after) was not found in the file")
     _after > length(f.data) && error("After is larger then the files length.")
     
     if B == Regex
@@ -46,11 +46,11 @@ function Line(f::File,r::Regex;
         _before = parseSpecifier(f,before,Val{:before}())
     end
     
-    _before == nothing && error("Before was not found in the file")
+    _before == nothing && error("Before ($before) was not found in the file")
     _before > length(f.data) && error("Before is larger then the files length.")
     _after > _before && error("After must be smaller than before!")
     ind = findfirst(f,r,from=_after,to=_before)
-    ind == nothing && error("Line was not found in the file")
+    ind == nothing && error("$r was not found in the file")
     return Line(f,ind)
 end
 
@@ -79,7 +79,7 @@ function Range(f::File;
     end
 
     _after > length(f.data) && error("After is larger then the files length.")
-    _after == nothing && error("After was not found in the file")
+    _after == nothing && error("After ($after) was not found in the file")
     
     if B == Regex
         _before = findfirst(f,before,from=_after+1)
@@ -88,13 +88,13 @@ function Range(f::File;
     end
 
     
+    _before == nothing && error("Before ($before) was not found in the file")
     _before > length(f.data) && error("Before is larger then the files length.")
-    _before == nothing && error("Before was not found in the file")
     _after > _before && error("After must be smaller than before!")
 
     if F == Regex
         _from = findfirst(f,from,from=_after,to=_before)
-        _from == nothing && error("From was not found in the file")
+        _from == nothing && error("From ($from) was not found in the file")
     elseif from != nothing
         _from = parseSpecifier(f,from,Val{:from}())
     else
@@ -105,10 +105,12 @@ function Range(f::File;
 
     if U == Regex
         _to = finduntil(f,until,from=max(_from,_after)+1,to=_before)
-        _to == nothing && error("Until was not found in the file")
+        _to == nothing && error("Until ($until) was not found in the file")
     elseif T == Regex
         _to = findfirst(f,to,from=max(_from,_after)+1,to=_before)
-        _to == nothing && error("To was not found in the file")
+        _to == nothing && error("To ($to) was not found in the file")
+    elseif isa(to,Int)
+        _to = _from + to
     elseif to != nothing
         _to = parseSpecifier(f,from,Val{:to}())
     else
