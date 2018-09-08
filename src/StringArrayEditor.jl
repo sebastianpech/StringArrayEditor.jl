@@ -13,9 +13,10 @@ export
     map!,
     map,
     prev,
-    next
+    next,
+    +,-
 
-import Base:show,delete!,insert!,copy,append!,==,length,iterate,getindex,in,replace!,findfirst,findnext,map!,next,map
+import Base:show,delete!,insert!,copy,append!,==,length,iterate,getindex,lastindex,in,replace!,findfirst,findnext,map!,next,map,+,-
 
 using PrePostCall
 

@@ -30,9 +30,17 @@ end
 
 eltype(r::Range) = Int
 
+lastindex(r::Range) = length(r)
+
+function getindex(r::Range,idx::UnitRange{Int})
+    first(idx) < 1 && throw(BoundsError(r,idx))
+    last(idx) > length(r) && throw(BoundsError(r,idx))
+    Range(r.file,r.from-1+first(idx),r.from-1+last(idx))
+end
+
 @alive r value(r::Range) = r.file.data[r.from:r.to]
 @alive r function value(r::Range,idx::Int)
-    idx > length(r) && BoundsError(r,idx)
+    idx > length(r) && throw(BoundsError(r,idx))
     return r.file.data[r.from+idx-1]
 end
 
@@ -48,8 +56,13 @@ function show(io::IO,r::Range)
     end
 end
 
-@alive r next(r::Range) = Line(r.file,r.to+1)
-@alive r prev(r::Range) = Line(r.file,r.from-1)
+@alive r next(r::Range,i::Int=1) = Line(r.file,r.to+i)
+@alive r prev(r::Range,i::Int=1) = Line(r.file,r.from-i)
+
++(l::Range,i::Int) = next(l,i)
+-(l::Range,i::Int) = prev(l,i)
++(i::Int,l::Range) = next(l,i)
+-(i::Int,l::Range) = prev(l,i)
 
 @alive r copy(r::Range) = Range(r.file,r.from,r.to)
 

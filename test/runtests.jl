@@ -270,33 +270,52 @@ end
 
 @testset "Search Functions" begin
 
-f = load("./data/testfile01.txt")
-l = Line(f,r"Line 2")
-@test l.ln == 2
-l2 = Line(f,r"Line 2",after=r"Line 5")
-@test l2.ln == 6
-l3 = Line(f,r"Line 2",after=l)
-@test l3.ln == 6
-@test_throws ErrorException Line(f,r"Line 7",before=l2)
-r = Range(f,from=r"Line 2",to=r"Line 2")
-@test r.from == 2
-@test r.to == 6
-r = Range(f,after=l,to=r"Line 3")
-@test r.from == 1
-@test r.to == 7
-r = Range(f,from=l,after=l,to=r"Line 3")
-@test r.from == 2
-@test r.to == 7
-replace!(l3,"ASDF")
-r = Range(f,from=l,until=r"Line")
-@test r.from == 2
-@test r.to == 5
+    f = load("./data/testfile01.txt")
+    l = Line(f,r"Line 2")
+    @test l.ln == 2
+    l2 = Line(f,r"Line 2",after=r"Line 5")
+    @test l2.ln == 6
+    l3 = Line(f,r"Line 2",after=l)
+    @test l3.ln == 6
+    @test_throws ErrorException Line(f,r"Line 7",before=l2)
+    r = Range(f,from=r"Line 2",to=r"Line 2")
+    @test r.from == 2
+    @test r.to == 6
+    r = Range(f,after=l,to=r"Line 3")
+    @test r.from == 1
+    @test r.to == 7
+    r = Range(f,from=l,after=l,to=r"Line 3")
+    @test r.from == 2
+    @test r.to == 7
+    replace!(l3,"ASDF")
+    r = Range(f,from=l,until=r"Line")
+    @test r.from == 2
+    @test r.to == 5
 end
 
 @testset "Save" begin
     f = load("./data/testfile01.txt")
     save(f,"test.txt")
-    readlines("test.txt") == f.data
+    @test readlines("test.txt") == f.data
     rm("test.txt")
+end
+@testset "Line and Range manipulations" begin
+    f = load("./data/testfile01.txt")
+    l1 = Line(f,1)
+    l2 = l1+3
+    @test l2.ln == 4
+    l3 = l2-1
+    @test l3.ln == 3
+    r1 = Range(f,2,5)
+    l2 = r1-1
+    @test l2.ln == 1
+    l3 = r1+2
+    @test l3.ln == 7
+    r2 = r1[2:end-1]
+    @test r2.from == 3
+    @test r2.to == 4
+    @test_throws BoundsError r2[-1:end]
+    @test_throws BoundsError r2[0:end]
+    @test_throws BoundsError r2[1:20]
 end
 end

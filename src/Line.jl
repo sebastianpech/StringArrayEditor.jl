@@ -22,8 +22,13 @@ function show(io::IO,l::Line)
     end
 end
 
-@alive l next(l::Line) = Line(l.file,l.ln+1)
-@alive l prev(l::Line) = Line(l.file,l.ln-1)
+@alive l next(l::Line,i::Int=1) = Line(l.file,l.ln+i)
+@alive l prev(l::Line,i::Int=1) = Line(l.file,l.ln-i)
+
++(l::Line,i::Int) = next(l,i)
+-(l::Line,i::Int) = prev(l,i)
++(i::Int,l::Line) = next(l,i)
+-(i::Int,l::Line) = prev(l,i)
 
 @alive l copy(l::Line) = Line(l.file,l.ln)
 
