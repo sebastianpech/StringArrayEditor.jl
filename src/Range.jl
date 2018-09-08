@@ -30,13 +30,13 @@ end
 
 eltype(r::Range) = Int
 
-value(r::Range) = r.file.data[r.from:r.to]
-function value(r::Range,idx::Int)
+@alive r value(r::Range) = r.file.data[r.from:r.to]
+@alive r function value(r::Range,idx::Int)
     idx > length(r) && BoundsError(r,idx)
     return r.file.data[r.from+idx-1]
 end
 
-length(r::Range) = r.to-r.from+1
+@alive r length(r::Range) = r.to-r.from+1
 
 ==(a::Range,b::Range) = a.from == b.from && a.to == b.to && a.file === b.file
 
@@ -48,15 +48,15 @@ function show(io::IO,r::Range)
     end
 end
 
-next(r::Range) = Line(r.file,r.to+1)
-prev(r::Range) = Line(r.file,r.from-1)
+@alive r next(r::Range) = Line(r.file,r.to+1)
+@alive r prev(r::Range) = Line(r.file,r.from-1)
 
-copy(r::Range) = Range(r.file,r.from,r.to)
+@alive r copy(r::Range) = Range(r.file,r.from,r.to)
 
 #=
 Delete functions
 =#
-function delete!(r::Range)
+@alive r function delete!(r::Range)
     notify_delete(r.file,r)
     deletefromreferences!(r.file,r)
     deleteat!(r.file.data,r.from:r.to)
@@ -64,7 +64,7 @@ function delete!(r::Range)
     return nothing
 end
 
-function destroy!(r::Range)
+@alive r function destroy!(r::Range)
     r.from = nothing
     r.to = nothing
     r.file = nothing
@@ -72,8 +72,12 @@ end
 
 isdestroyed(r::Range) = r.from == nothing && r.to == nothing && r.file == nothing
 
-in(sub::Range,sup::Range) = sub.from >= sup.from && sub.to <= sup.to
-in(sub::Line,sup::Range) = sub.ln >= sup.from && sub.ln <= sup.to
+@alive sub sup function in(sub::Range,sup::Range)
+    sub.from >= sup.from && sub.to <= sup.to
+end
+@alive sub sup function in(sub::Line,sup::Range)
+    sub.ln >= sup.from && sub.ln <= sup.to
+end
 
 @resolveRange self function notify_delete(self::Range,del::Range)
     del_len = length(del)
@@ -115,7 +119,7 @@ end
 Insert functions
 =#
 
-function insert!(r::Range,str::Vector{String})
+@alive r function insert!(r::Range,str::Vector{String})
     notify_insert(r.file,r,length(str))
     splice!(r.file.data,r.from:r.from-1,str)
     r.from += length(str)
@@ -123,8 +127,8 @@ function insert!(r::Range,str::Vector{String})
     return nothing
 end
 
-insert!(r::Range,str::String) = insert!(r::Range,[str,])
-insert!(r::Range,from::T) where T<:Reference = insert!(r,value(from))
+@alive r insert!(r::Range,str::String) = insert!(r::Range,[str,])
+@alive r from insert!(r::Range,from::T) where T<:Reference = insert!(r,value(from))
 
 function notify_insert(self::Range,ins::Int,lines::Int)
     if self.from >= ins
@@ -148,14 +152,14 @@ end
 Append functions
 =#
 
-function append!(r::Range,str::Vector{String})
+@alive r function append!(r::Range,str::Vector{String})
     notify_append(r.file,r,length(str))
     splice!(r.file.data,r.to+1:r.to,str)
     return nothing
 end
 
 append!(r::Range,str::String) = append!(r::Range,[str,])
-append!(r::Range,from::T) where T<:Reference = append!(r,value(from))
+@alive r from append!(r::Range,from::T) where T<:Reference = append!(r,value(from))
 
 notify_append(self::Range,ins::Range,lines::Int) = notify_insert(self,ins.from,lines)
 notify_append(self::Range,ins::Line,lines::Int) = notify_insert(self,ins.ln,lines)
@@ -170,7 +174,7 @@ end
 Replace functions
 =#
 
-function replace!(r::Range,str::Vector{String})
+@alive r function replace!(r::Range,str::Vector{String})
     lines = length(r)-length(str)
     if lines == 0
         r.file.data[r.from:r.to] = str
@@ -189,9 +193,9 @@ function replace!(r::Range,str::Vector{String})
     return r
 end
 
-replace!(r::Range,str::String) = replace!(r,[str,])
+@alive r replace!(r::Range,str::String) = replace!(r,[str,])
 
-function replace!(l::Line,str::Vector{String})
+@alive l function replace!(l::Line,str::Vector{String})
     lines = 1-length(str)
     if lines == 0
         l.file.data[l.ln] = str[1]
@@ -257,7 +261,7 @@ replace!(r::Range,from::T) where T<:Reference = replace!(r,value(from))
 movebeforeline(ref::Range) = ref.from
 moveafterline(ref::Range) = ref.to
 
-function move(self::Range,to::T) where T<:Reference
+@alive self to function move(self::Range,to::T) where T<:Reference
     nfrom = movebeforeline(to)
     nto = nfrom + length(self)-1
     # Insert
@@ -270,16 +274,16 @@ function move(self::Range,to::T) where T<:Reference
     self.to = nto
 end
 
-moveafter(self::Range,to::T) where T<:Reference = move(self,next(to))
+@alive self to moveafter(self::Range,to::T) where T<:Reference = move(self,next(to))
 
 ###############################################################################
 #                                Misc functions                               #
 ###############################################################################
 
-function map!(fun::Function,r::Range)
+@alive r function map!(fun::Function,r::Range)
     for i in r
         r.file.data[i] = fun(r.file.data[i])
     end
 end
 
-map(fun::Function,r::Range) = map(fun,r.file.data[r.from:r.to])
+@alive r map(fun::Function,r::Range) = map(fun,r.file.data[r.from:r.to])

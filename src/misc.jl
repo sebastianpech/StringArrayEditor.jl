@@ -4,3 +4,5 @@ function truncate(str::T,n::Int=30) where T<:AbstractString
     end
     return str
 end
+
+@pre alive(self::T) where T<:Reference = isdestroyed(self) && error("Can't perform operation on deleted $T.")

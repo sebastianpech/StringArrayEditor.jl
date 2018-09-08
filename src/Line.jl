@@ -12,7 +12,7 @@ end
 
 ==(a::Line,b::Line) = a.ln == b.ln && a.file === b.file
 
-value(l::Line) = l.file.data[l.ln]
+@alive l value(l::Line) = l.file.data[l.ln]
 
 function show(io::IO,l::Line)
     if l.file == nothing
@@ -22,15 +22,15 @@ function show(io::IO,l::Line)
     end
 end
 
-next(l::Line) = Line(l.file,l.ln+1)
-prev(l::Line) = Line(l.file,l.ln-1)
+@alive l next(l::Line) = Line(l.file,l.ln+1)
+@alive l prev(l::Line) = Line(l.file,l.ln-1)
 
-copy(l::Line) = Line(l.file,l.ln)
+@alive l copy(l::Line) = Line(l.file,l.ln)
 
 #=
 Delete functions
 =#
-function delete!(l::Line)
+@alive l function delete!(l::Line)
     deletefromreferences!(l.file,l)
     deleteat!(l.file.data,l.ln)
     notify_delete(l.file,l)
@@ -38,7 +38,7 @@ function delete!(l::Line)
     return nothing
 end
 
-function destroy!(l::Line)
+@alive l function destroy!(l::Line)
     l.file = nothing
     l.ln = nothing
 end
@@ -57,21 +57,21 @@ end
 Insert functions
 =#
 
-function insert!(l::Line,str::String)
+@alive l function insert!(l::Line,str::String)
     notify_insert(l.file,l,1)
     insert!(l.file.data,l.ln,str)
     l.ln += 1
     return nothing
 end
 
-function insert!(l::Line,str::Vector{String})
+@alive l function insert!(l::Line,str::Vector{String})
     notify_insert(l.file,l,length(str))
     splice!(l.file.data,l.ln:l.ln-1,str)
     l.ln += length(str)
     return nothing
 end
 
-insert!(l::Line,from::T) where T<:Reference = insert!(l,value(from))
+@alive l from insert!(l::Line,from::T) where T<:Reference = insert!(l,value(from))
 
 function notify_insert(self::Line,ins::Line,lines::Int)
     if self.ln >= ins.ln
@@ -83,7 +83,7 @@ end
 Append functions
 =#
 
-function append!(l::Line,str::String)
+@alive l function append!(l::Line,str::String)
     notify_append(l.file,l,1)
     if l.ln < length(l.file.data)
         insert!(l.file.data,l.ln+1,str)
@@ -93,7 +93,7 @@ function append!(l::Line,str::String)
     return nothing
 end
 
-function append!(l::Line,str::Vector{String})
+@alive l function append!(l::Line,str::Vector{String})
     notify_append(l.file,l,length(str))
     if l.ln < length(l.file.data)
         splice!(l.file.data,l.ln+1:l.ln,str)
@@ -103,7 +103,7 @@ function append!(l::Line,str::Vector{String})
     return nothing
 end
 
-append!(l::Line,from::T) where T<:Reference = append!(l,value(from))
+@alive l from append!(l::Line,from::T) where T<:Reference = append!(l,value(from))
 
 function notify_append(self::Line,app::Line,lines::Int)
     if self.ln > app.ln
@@ -115,12 +115,12 @@ end
 Replace functions
 =#
 
-function replace!(l::Line,str::String)
+@alive l function replace!(l::Line,str::String)
     l.file.data[l.ln] = str
     return l
 end
 
-replace!(l::Line,from::T) where T<:Reference = replace!(l,value(from))
+@alive l from replace!(l::Line,from::T) where T<:Reference = replace!(l,value(from))
 
 ###############################################################################
 #                                     Move                                    #
@@ -129,7 +129,7 @@ replace!(l::Line,from::T) where T<:Reference = replace!(l,value(from))
 movebeforeline(ref::Line) = ref.ln
 moveafterline(ref::Line) = ref.ln
 
-function move(self::Line,to::T) where T<:Reference
+@alive self to function move(self::Line,to::T) where T<:Reference
     nfrom = movebeforeline(to)
     # Insert
     insert!(self,to)
@@ -140,4 +140,4 @@ function move(self::Line,to::T) where T<:Reference
     self.from = nfrom
 end
 
-moveafter(self::Line,to::T) where T<:Reference = move(self,next(to))
+@alive self to moveafter(self::Line,to::T) where T<:Reference = move(self,next(to))
