@@ -20,6 +20,9 @@ import Base:show,delete!,insert!,copy,append!,==,length,iterate,getindex,lastind
 
 using PrePostCall
 
+using InteractiveUtils
+import InteractiveUtils.edit
+
 """
     Reference
 
@@ -55,6 +58,37 @@ end
 
 function show(io::IO,f::File)
     print(io,"File(<Lines $(length(f.data))>,<Ref $(length(f.references))>)")
+end
+
+function edit(f::File)
+    # Save file to tmp
+    path,io = mktemp()
+    for l in f.data
+        write(io,l,"\n")
+    end
+    close(io)
+    # Edit File
+    edit(path)
+end
+
+writeToFile(io::IOStream,l::String) = write(io,l)
+function writeToFile(io::IOStream,l::Vector{String})
+    for l in 
+        write(io,l,"\n")
+    end
+end
+
+function edit(r::T) where T<:Reference
+    # Save file to tmp
+    path,io = mktemp()
+    writeToFile(io,value(r))
+    close(io)
+    # Edit File
+    edit(path)
+    # Reload edited stuff
+    _edit = readlines(path)
+    # Replace old with new
+    replace!(r,_edit)
 end
 
 function deletefromreferences!(f::File,del::Reference)
