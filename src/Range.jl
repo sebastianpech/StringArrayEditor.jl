@@ -137,11 +137,26 @@ Insert functions
     splice!(r.file.data,r.from:r.from-1,str)
     r.from += length(str)
     r.to += length(str)
-    return nothing
+    if length(str) == 1
+        return Line(r.file,r.from-1)
+    else
+        return Range(r.file,r.from-length(str),r.from-1)
+    end
 end
 
 @alive r insert!(r::Range,str::String) = insert!(r::Range,[str,])
 @alive r from insert!(r::Range,from::T) where T<:Reference = insert!(r,value(from))
+
+@alive l function insert!(l::Line,str::Vector{String})
+    notify_insert(l.file,l,length(str))
+    splice!(l.file.data,l.ln:l.ln-1,str)
+    l.ln += length(str)
+    if length(str) == 1
+        return Line(l.file,l.ln-1)
+    else
+        return Range(l.file,l.ln-length(str),l.ln-1)
+    end
+end
 
 function notify_insert(self::Range,ins::Int,lines::Int)
     if self.from >= ins
@@ -168,7 +183,25 @@ Append functions
 @alive r function append!(r::Range,str::Vector{String})
     notify_append(r.file,r,length(str))
     splice!(r.file.data,r.to+1:r.to,str)
-    return nothing
+    if length(str) == 1
+        return Line(r.file,r.to+1)
+    else
+        return Range(r.file,r.to+1,r.to+length(str))
+    end
+end
+
+@alive l function append!(l::Line,str::Vector{String})
+    notify_append(l.file,l,length(str))
+    if l.ln < length(l.file.data)
+        splice!(l.file.data,l.ln+1:l.ln,str)
+    else
+        append!(l.file.data,str)
+    end
+    if length(str) == 1
+        return Line(l.file,l.ln+1)
+    else
+        return Range(l.file,l.ln+1,l.ln+length(str))
+    end
 end
 
 append!(r::Range,str::String) = append!(r::Range,[str,])
@@ -274,20 +307,34 @@ replace!(r::Range,from::T) where T<:Reference = replace!(r,value(from))
 movebeforeline(ref::Range) = ref.from
 moveafterline(ref::Range) = ref.to
 
-@alive self to function move(self::Range,to::T) where T<:Reference
-    nfrom = movebeforeline(to)
-    nto = nfrom + length(self)-1
-    # Insert
-    insert!(self,to)
-    # Delete
+@alive self to function move!(self::Range,to::T) where T<:Reference
+    # Insert duplicate
+    dup = insert!(to,self)
+    # Delete original but keep reference
     notify_delete(self.file,self)
     deleteat!(self.file.data,self.from:self.to)
     # Move Range pointer
-    self.from = nfrom
-    self.to = nto
+    self.from = dup.from
+    self.to = dup.to
+    # Delete reference for dup
+    deletefromreferences!(dup.file,dup)
+    return self
 end
 
-@alive self to moveafter(self::Range,to::T) where T<:Reference = move(self,next(to))
+@alive self to function moveafter!(self::Range,to::T) where T<:Reference
+    # Insert duplicate
+    dup = append!(to,self)
+    # Delete original but keep reference
+    notify_delete(self.file,self)
+    deleteat!(self.file.data,self.from:self.to)
+    # Move Range pointer
+    self.from = dup.from
+    self.to = dup.to
+    # Delete reference for dup
+    deletefromreferences!(dup.file,dup)
+    return self
+end
+
 
 ###############################################################################
 #                                Misc functions                               #

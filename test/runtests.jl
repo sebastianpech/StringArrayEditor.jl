@@ -39,14 +39,18 @@ using StringArrayEditor
     end
     after = Line(f,7)
     @testset "Insert Lines" begin
-        insert!(l2,"Hello World")
+        li = insert!(l2,"Hello World")
+        @test isa(li,Line)
+        @test value(li) == "Hello World"
         @test l2.ln == 5
         @test f.data[l2.ln-1] == "Hello World"
         @test after.ln == 8
         @test StringArrayEditor.value(after) == "Line 7"
         insert!(l2,after)
         @test f.data[l2.ln-1] == "Line 7"
-        insert!(l2,["Vec 1","Vec 2", "Vec 3"])
+        ri = insert!(l2,["Vec 1","Vec 2", "Vec 3"])
+        @test isa(ri,Range)
+        @test value(ri) == ["Vec 1","Vec 2","Vec 3"]
         @test l2.ln == 9
         @test f.data[l2.ln-4:l2.ln-1] == ["Line 7", "Vec 1","Vec 2", "Vec 3"]
         @test after.ln == 12
@@ -57,7 +61,9 @@ using StringArrayEditor
     l3 = Line(f,7)
     lend = Line(f,length(f.data))
     @testset "Append Lines" begin
-        append!(l2,"Hello World")
+        a1 = append!(l2,"Hello World")
+        @test value(a1) == "Hello World"
+        @test a1.ln == 4
         @test l2.ln == 3
         @test StringArrayEditor.value(l2) == "Line 3"
         @test l1.ln == 2
@@ -67,7 +73,9 @@ using StringArrayEditor
         append!(lend,"asdf")
         @test f.data[end-1:end] == ["Line 8", "asdf"]
         nlend = Line(f,length(f.data))
-        append!(nlend,["ffff","gggg"])
+        a2 = append!(nlend,["ffff","gggg"])
+        @test value(a2) == ["ffff","gggg"]
+        @test a2.from == nlend.ln+1
         @test f.data[end-3:end] == ["Line 8", "asdf", "ffff", "gggg"]
         append!(l2,["ffff","gggg"])
         @test l3.ln == 10
@@ -151,10 +159,13 @@ using StringArrayEditor
         rin = Range(f,4,5)
         roverlap = Range(f,5,7)
         rsurround = Range(f,2,9)
-        insert!(rbefore,"asdf")
+        i2 = insert!(rbefore,"asdf")
+        @test value(i2) == "asdf"
+        @test i2.ln == rbefore.from-1
         @test lafter.ln == 9
         @test rafter.from == 9
-        insert!(rin,["asdf","ffff"])
+        i3 = insert!(rin,["asdf","ffff"])
+        @test value(i3) == ["asdf","ffff"]
         @test rin.from == 7
         @test rin.to == 8
         @test rsurround.from == 3
@@ -180,12 +191,14 @@ using StringArrayEditor
     rin = Range(f,4,5)
     roverlap = Range(f,5,7)
     rsurround = Range(f,2,9)
-    append!(rbefore,"asdf")
+    ra = append!(rbefore,"asdf")
+    @test value(ra) == "asdf"
     @test rbefore.from == 1
     @test rbefore.to == 2
     @test lafter.ln == 9
     @test rafter.from == 9
-    append!(rin,["asdf","ffff"])
+    ra2 = append!(rin,["asdf","ffff"])
+    @test value(ra2) == ["asdf","ffff"]
     @test rin.from == 5
     @test rin.to == 6
     @test rsurround.from == 3
@@ -317,5 +330,21 @@ end
     @test_throws BoundsError r2[-1:end]
     @test_throws BoundsError r2[0:end]
     @test_throws BoundsError r2[1:20]
+end
+@testset "Move" begin
+    f = load("./data/testfile01.txt")
+    l = Line(f,1)
+    r = replace!(l,["foo","bar","baz"])
+    l = replace!(Line(f,8),"ASDF")
+    move!(r,l)
+    @test l.ln == 8
+    f.data[l.ln-3:l.ln-1] == ["foo","bar","baz"]
+    @test r.from == l.ln-3
+    @test r.to == l.ln-1
+    @test value(r) == ["foo","bar","baz"]
+    move!(l,r)
+    @test l.ln == 5
+    @test value(l) == "ASDF"
+
 end
 end

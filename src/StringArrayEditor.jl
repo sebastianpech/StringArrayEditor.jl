@@ -7,6 +7,8 @@ export
     delete!,
     append!,
     replace!,
+    move!,
+    moveafter!,
     Range,
     value,
     save,
@@ -69,11 +71,12 @@ function edit(f::File)
     close(io)
     # Edit File
     edit(path)
+    rm(path)
 end
 
 writeToFile(io::IOStream,l::String) = write(io,l)
-function writeToFile(io::IOStream,l::Vector{String})
-    for l in 
+function writeToFile(io::IOStream,lines::Vector{String})
+    for l in lines
         write(io,l,"\n")
     end
 end
@@ -89,6 +92,7 @@ function edit(r::T) where T<:Reference
     _edit = readlines(path)
     # Replace old with new
     replace!(r,_edit)
+    rm(path)
 end
 
 function deletefromreferences!(f::File,del::Reference)

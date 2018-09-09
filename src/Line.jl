@@ -66,14 +66,7 @@ Insert functions
     notify_insert(l.file,l,1)
     insert!(l.file.data,l.ln,str)
     l.ln += 1
-    return nothing
-end
-
-@alive l function insert!(l::Line,str::Vector{String})
-    notify_insert(l.file,l,length(str))
-    splice!(l.file.data,l.ln:l.ln-1,str)
-    l.ln += length(str)
-    return nothing
+    return Line(l.file,l.ln-1)
 end
 
 @alive l from insert!(l::Line,from::T) where T<:Reference = insert!(l,value(from))
@@ -95,17 +88,7 @@ Append functions
     else
         push!(l.file.data,str)
     end
-    return nothing
-end
-
-@alive l function append!(l::Line,str::Vector{String})
-    notify_append(l.file,l,length(str))
-    if l.ln < length(l.file.data)
-        splice!(l.file.data,l.ln+1:l.ln,str)
-    else
-        append!(l.file.data,str)
-    end
-    return nothing
+    return Line(l.file,l.ln+1)
 end
 
 @alive l from append!(l::Line,from::T) where T<:Reference = append!(l,value(from))
@@ -134,15 +117,29 @@ end
 movebeforeline(ref::Line) = ref.ln
 moveafterline(ref::Line) = ref.ln
 
-@alive self to function move(self::Line,to::T) where T<:Reference
-    nfrom = movebeforeline(to)
-    # Insert
-    insert!(self,to)
-    # Delete
+@alive self to function move!(self::Line,to::T) where T<:Reference
+    # Insert duplicate
+    dup = insert!(to,self)
+    # Delete original but keep reference
     notify_delete(self.file,self)
-    deleteat!(self.file.data,self.from:self.to)
-    # Move Line pointer
-    self.from = nfrom
+    deleteat!(self.file.data,self.ln)
+    # Move pointer
+    self.ln = dup.ln
+    # Delete reference for dup
+    deletefromreferences!(dup.file,dup)
+    return self
 end
 
-@alive self to moveafter(self::Line,to::T) where T<:Reference = move(self,next(to))
+@alive self to function moveafter!(self::Line,to::T) where T<:Reference
+    # Insert duplicate
+    dup = append!(to,self)
+    # Delete original but keep reference
+    notify_delete(self.file,self)
+    deleteat!(self.file.data,self.from:self.to)
+    # Move pointer
+    self.ln = dup.ln
+    # Delete reference for dup
+    deletefromreferences!(dup.file,dup)
+    return self
+end
+
