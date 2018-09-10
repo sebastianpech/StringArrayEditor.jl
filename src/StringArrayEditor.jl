@@ -12,6 +12,7 @@ export
     move!,
     moveafter!,
     Range,
+    Ranges,
     value,
     save,
     map!,

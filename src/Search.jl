@@ -164,3 +164,51 @@ function Lines(f::File,r::Regex;
     ind == nothing && error("$r was not found in the file")
     return Line.(Ref{File}(f),ind) |> Collection
 end
+
+function Ranges(f::File,r::Regex;
+              after::A=nothing,
+              before::B=nothing
+              ) where {A<:Union{Regex,Line,Int,Nothing}, B<:Union{Regex,Line,Int,Nothing}}
+    if A == Regex
+        _after = findfirst(f,after)
+    else
+        _after = parseSpecifier(f,after,Val{:after}())
+    end
+
+    _after == nothing && error("After ($after) was not found in the file")
+    _after > length(f.data) && error("After is larger then the files length.")
+    
+    if B == Regex
+        _before = findfirst(f,before,from=_after+1)
+    else
+        _before = parseSpecifier(f,before,Val{:before}())
+    end
+    
+    _before == nothing && error("Before ($before) was not found in the file")
+    _before > length(f.data) && error("Before is larger then the files length.")
+    _after > _before && error("After must be smaller than before!")
+    ind = findall(f,r,from=_after,to=_before)
+    ind == nothing && error("$r was not found in the file")
+
+    ret = Collection(Reference[])
+
+    start = ind[1]
+    last = ind[1]
+    for i in ind[2:end]
+        if i != (last+1) || i == ind[end]
+            if start < last
+                push!(ret.refs,Range(f,start,i == ind[end] ? i : last))
+            else
+                push!(ret.refs,Line(f,start))
+                if i == ind[end]
+                    push!(ret.refs,Line(f,i))
+                end
+            end
+            start = i
+            last = i
+        else
+            last = i
+        end
+    end
+    return ret
+end
