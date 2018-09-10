@@ -18,6 +18,20 @@ function finduntil(f::File,r::Regex;from::Int=1,to::Int=length(f.data))
     return to
 end
 
+function findall(f::File,r::Regex;from::Int=1,to::Int=length(f.data))
+    res = Vector{Int}()
+    for l in from:to
+        if occursin(r,f.data[l])
+            push!(res,l)
+        end
+    end
+    if length(res) == 0
+        return nothing
+    else
+        return res
+    end
+end
+
 parseSpecifier(f::File,s::Line,::Val{:after})= s.ln+1
 parseSpecifier(f::File,s::Int,::Val{:after}) = s+1
 parseSpecifier(f::File,s::Line,::Val{:before})= s.ln-1
@@ -122,4 +136,31 @@ function Range(f::File;
     _from >= _to && error("To must be larger than from!")
 
     Range(f,_from,_to)
+end
+
+function Lines(f::File,r::Regex;
+              after::A=nothing,
+              before::B=nothing
+              ) where {A<:Union{Regex,Line,Int,Nothing}, B<:Union{Regex,Line,Int,Nothing}}
+    if A == Regex
+        _after = findfirst(f,after)
+    else
+        _after = parseSpecifier(f,after,Val{:after}())
+    end
+
+    _after == nothing && error("After ($after) was not found in the file")
+    _after > length(f.data) && error("After is larger then the files length.")
+    
+    if B == Regex
+        _before = findfirst(f,before,from=_after+1)
+    else
+        _before = parseSpecifier(f,before,Val{:before}())
+    end
+    
+    _before == nothing && error("Before ($before) was not found in the file")
+    _before > length(f.data) && error("Before is larger then the files length.")
+    _after > _before && error("After must be smaller than before!")
+    ind = findall(f,r,from=_after,to=_before)
+    ind == nothing && error("$r was not found in the file")
+    return Line.(Ref{File}(f),ind) |> Collection
 end

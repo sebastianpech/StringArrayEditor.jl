@@ -3,6 +3,8 @@ module StringArrayEditor
 export
     load,
     Line,
+    Lines,
+    Collection,
     insert!,
     delete!,
     append!,
