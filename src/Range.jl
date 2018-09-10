@@ -292,12 +292,6 @@ function notify_replace(self::Line,rep::Range,lines::Int)
     end
 end
 
-function notify_replace(self::Line,rep::Line,lines::Int)
-    if self.ln > rep.ln
-        self.ln -= lines
-    end
-end
-
 replace!(r::Range,from::T) where T<:Reference = replace!(r,value(from))
 
 ###############################################################################

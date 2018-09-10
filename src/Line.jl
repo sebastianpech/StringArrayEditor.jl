@@ -110,6 +110,12 @@ end
 
 @alive l from replace!(l::Line,from::T) where T<:Reference = replace!(l,value(from))
 
+function notify_replace(self::Line,rep::Line,lines::Int)
+    if self.ln > rep.ln
+        self.ln -= lines
+    end
+end
+
 ###############################################################################
 #                                     Move                                    #
 ###############################################################################
@@ -135,7 +141,7 @@ end
     dup = append!(to,self)
     # Delete original but keep reference
     notify_delete(self.file,self)
-    deleteat!(self.file.data,self.from:self.to)
+    deleteat!(self.file.data,self.ln)
     # Move pointer
     self.ln = dup.ln
     # Delete reference for dup
