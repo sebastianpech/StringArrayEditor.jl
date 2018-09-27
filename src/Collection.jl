@@ -23,6 +23,21 @@ function show(io::IO,c::Collection)
     end
 end
 
+iterate(c::Collection) = (c[1],1)
+
+function iterate(c::Collection,state::Int)
+    if state < length(c)
+        return (c[state+1],state+1)
+    else
+        return nothing
+    end
+end
+
+getindex(c::Collection,i::Int) = c.refs[i]
+
+length(c::Collection) = length(c.refs)
+    
+
 @alive c next(c::Collection,i::Int=1) = next.(c.refs,i)
 @alive c prev(c::Collection,i::Int=1) = prev.(c.refs,i)
 
