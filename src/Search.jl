@@ -133,7 +133,7 @@ function Range(f::File;
     
     _after > _to && error("To must be larger than after!")
     _before < _to && error("To must be smaller than before!")
-    _from >= _to && error("To must be larger than from!")
+    _from > _to && error("To must be larger than from!")
 
     Range(f,_from,_to)
 end

@@ -3,7 +3,7 @@ mutable struct Range <: Reference
     from::Union{Int,Nothing}
     to::Union{Int,Nothing}
     function Range(f::File,from::Int,to::Int)
-        @assert from < to
+        @assert from <= to
         @assert length(f.data) >= to
         r = new(f,from,to)
         push!(f.references,r)
