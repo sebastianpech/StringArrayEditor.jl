@@ -12,7 +12,7 @@ mutable struct Range <: Reference
 end
 
 @post function resolveRange(r::Range)
-    if !isdestroyed(r) && !((r.from < r.to))
+    if !isdestroyed(r) && !((r.from <= r.to))
         deletefromreferences!(r.file,r)
         destroy!(r)
     end
