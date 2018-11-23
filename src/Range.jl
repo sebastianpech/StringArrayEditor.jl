@@ -38,6 +38,10 @@ function getindex(r::Range,idx::UnitRange{Int})
     Range(r.file,r.from-1+first(idx),r.from-1+last(idx))
 end
 
+function getindex(r::Range,idx::Int)
+    Line(r.file,r.from-1+first(idx))
+end
+
 @alive r value(r::Range) = r.file.data[r.from:r.to]
 @alive r function value(r::Range,idx::Int)
     idx > length(r) && throw(BoundsError(r,idx))
