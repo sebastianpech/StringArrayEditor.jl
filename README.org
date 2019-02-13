@@ -137,7 +137,7 @@ f.data
 :   "baz"
 : #+END_EXAMPLE
 
-The reference to the line still exists, but is now marked as =Deleted= an
+The reference to the line still exists, but is now marked as =Deleted= and
 cannot be used further:
 
 #+BEGIN_SRC jupyter-julia :exports both
@@ -158,7 +158,7 @@ Every =Reference= has the following editing methods implemented:
 - =move!(from,to)=
 - =moveafter!(from,to)=
 where =at=, =after=, =from= and =to= must be some subtype of =Reference= and
-=value= must be a subtype of =Reference, =String= or =Vector{String}=.
+=value= must be a subtype of =Reference, String= or =Vector{String}=.
 The methods all return the newly generated =References=.
 
 So for example to collect foo, bar and baz we can move baz up to line 3.
