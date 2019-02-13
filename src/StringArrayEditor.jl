@@ -21,7 +21,7 @@ export
     next,
     +,-
 
-import Base:show,delete!,insert!,copy,append!,==,length,iterate,getindex,lastindex,in,replace!,findfirst,findnext,map!,next,map,+,-
+import Base:show,delete!,insert!,copy,append!,==,length,iterate,getindex,lastindex,in,replace!,findfirst,findnext,map!,map,+,-
 
 using PrePostCall
 
