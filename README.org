@@ -1,0 +1,441 @@
+* StringArrayEditor
+** Simple textfile editing and searching
+#+BEGIN_SRC jupyter-julia :results none :output none
+using StringArrayEditor
+#+END_SRC
+
+Create an example file
+
+#+BEGIN_SRC jupyter-julia :results none
+  open("testfile","w") do f
+      write(f,join(["foo","bar","line 3", "line 4","line 3", "baz"],"\n"))
+  end
+#+END_SRC
+
+Load a files using the method =load=:
+
+#+BEGIN_SRC jupyter-julia
+  f = load("testfile")
+#+END_SRC
+
+#+RESULTS:
+: # Out[16]:
+: : File(<Lines 6>,<Ref 0>)
+
+The file currently has six lines and zero references.
+Mistakenly the file contains two lines "line 3". In order to remove them
+multiple options are available.
+
+A line can be found by using the =Line= method with a regular expression.
+#+BEGIN_SRC jupyter-julia
+l = Line(f,r"line 3")
+#+END_SRC
+
+#+RESULTS:
+: # Out[17]:
+: : Line(3) #line 3
+
+This returns the first match for the provided regular expression.
+The =Line= method is defined in file =Search.jl=, with some other search
+functions.
+=Line= also has two keywords =after= and =before=. Both can be 
+- a =Regex=,
+- another =Line= or
+- an =Int= referring to a linenumber.
+
+So if we want to find the second line we could do another search for
+"line 3" after =l=.
+
+#+BEGIN_SRC jupyter-julia
+l2 = Line(f,r"line 3",after=l)
+#+END_SRC
+
+#+RESULTS:
+: # Out[18]:
+: : Line(5) #line 3
+
+This now gives us the fifth line in the document. Alternatively if we
+are sure that the wrong line is for sure 2 lines below we can use the
+=next= function on our line =l=.
+
+#+BEGIN_SRC jupyter-julia
+next(l,2)
+#+END_SRC
+
+#+RESULTS:
+: # Out[19]:
+: : Line(5) #line 3
+
+or
+
+#+BEGIN_SRC jupyter-julia
+l + 2
+#+END_SRC
+
+#+RESULTS:
+: # Out[20]:
+: : Line(5) #line 3
+
+We can also check if the line we found before matches the one we found
+with this alternative method:
+
+#+BEGIN_SRC jupyter-julia
+l2 == l+2
+#+END_SRC
+
+#+RESULTS:
+: # Out[21]:
+: : true
+
+Another very useful search method you can find in =Search.jl= is
+=Lines=. Its arguments equal the ones for =Line= but the search is not
+stopped after the first match, instead all matches in the document are
+returned:
+
+#+BEGIN_SRC jupyter-julia
+ls = Lines(f,r"line 3")
+#+END_SRC
+
+#+RESULTS:
+: # Out[22]:
+: #+BEGIN_EXAMPLE
+:   2-element Collection:
+:   Line(3) #line 3
+:   Line(5) #line 3
+: #+END_EXAMPLE
+
+This returns an indexable =Collection= type which is a special wrapper
+around =Vector{Reference}= where =Reference= is the abstract type for all
+methods (=Line=, =Range=, =Collection=) that references some part of a =file=.
+
+So to actually delete a line, =delete!= can be called. All =Reference= types
+contain a pointer to the file they reference which makes working with
+lines very convenient as the document they are in must not be declared
+in the call.
+
+#+BEGIN_SRC jupyter-julia
+delete!(l2)
+#+END_SRC
+
+#+RESULTS:
+: # Out[23]:
+
+The content of the file looks like this now:
+
+#+BEGIN_SRC jupyter-julia
+f.data
+#+END_SRC
+
+#+RESULTS:
+: # Out[24]:
+: #+BEGIN_EXAMPLE
+:   5-element Array{String,1}:
+:   "foo"
+:   "bar"
+:   "line 3"
+:   "line 4"
+:   "baz"
+: #+END_EXAMPLE
+
+The reference to the line still exists, but is now marked as =Deleted= an
+cannot be used further:
+
+#+BEGIN_SRC jupyter-julia
+l2
+#+END_SRC
+
+#+RESULTS:
+: # Out[25]:
+: : *Deleted*
+
+*** Other editing methods
+
+Every =Reference= has the following editing methods implemented:
+- =delete!(at)=
+- =insert!(at,value)=
+- =append!(after,value)=
+- =replace!(at,value)=
+- =move!(from,to)=
+- =moveafter!(from,to)=
+where =at=, =after=, =from= and =to= must be some subtype of =Reference= and
+=value= must be a subtype of =Reference, =String= or =Vector{String}=.
+The methods all return the newly generated =References=.
+
+So for example to collect foo, bar and baz we can move baz up to line 3.
+
+#+BEGIN_SRC jupyter-julia
+baz = Line(f,r"baz")
+move!(baz,l)
+#+END_SRC
+
+#+RESULTS:
+: # Out[28]:
+: : Line(3) #baz
+
+The content of the file looks like this now
+#+BEGIN_SRC jupyter-julia
+f.data
+#+END_SRC
+
+#+RESULTS:
+: # Out[29]:
+: #+BEGIN_EXAMPLE
+:   5-element Array{String,1}:
+:   "foo"
+:   "bar"
+:   "baz"
+:   "line 3"
+:   "line 4"
+: #+END_EXAMPLE
+
+Another nice thing about =StringArrayEditor= is that it resolves changes
+through line rearrangements. So our previous reference to the value line
+3 still points to the correct line though it has moved down
+
+#+BEGIN_SRC jupyter-julia
+l
+#+END_SRC
+
+#+RESULTS:
+: # Out[30]:
+: : Line(4) #line 3
+
+Now line 3 is actually in line 4 and line 4 is actually in line 5. To
+solve this we use a =Range= and select all lines starting with line
+
+#+BEGIN_SRC jupyter-julia
+r = Range(f,from=r"line",until=r"line")
+#+END_SRC
+
+#+RESULTS:
+: # Out[33]:
+: : Range(4:5) #line 3▿line 4
+
+A range must be selected using a combination of =from= and =until= or =from=
+and =to=. Where =from= and =to= can be a =Regex=, a =Line= or a line number as
+=Int=. =until= must be a =Regex=.
+If =until= is given starting from =to= as long as =until= matches the range is
+expanded.
+
+It would be possible to select the range with =from= and =to= using:
+#+BEGIN_SRC jupyter-julia
+r2 = Range(f,from=r"line",to=r"line 4")
+#+END_SRC
+
+#+RESULTS:
+: # Out[34]:
+: : Range(4:5) #line 3▿line 4
+
+We can test this by matching their values.
+
+#+BEGIN_SRC jupyter-julia
+r == r2
+#+END_SRC
+
+#+RESULTS:
+: # Out[35]:
+: : true
+
+It should be noted, that the value of every =Reference= can be obtained by
+using the =value= function
+
+#+BEGIN_SRC jupyter-julia :results output
+@show value(r2)
+@show value(l)
+#+END_SRC
+
+#+RESULTS:
+: value(r2) = ["line 3", "line 4"]
+: value(l) = "line 3"
+
+So to fix the mistake of the wrong numbering we can now replace the
+range with the correct line numbers:
+
+#+BEGIN_SRC jupyter-julia
+r_new = replace!(r,["line 4", "line 5"])
+#+END_SRC
+
+#+RESULTS:
+: # Out[46]:
+: : Range(4:5) #line 4▿line 5
+
+The file now looks like this
+#+BEGIN_SRC jupyter-julia
+f.data
+#+END_SRC
+
+#+RESULTS:
+: # Out[39]:
+: #+BEGIN_EXAMPLE
+:   5-element Array{String,1}:
+:   "foo"
+:   "bar"
+:   "baz"
+:   "line 4"
+:   "line 5"
+: #+END_EXAMPLE
+
+If i want to add a copy of foo, bar, baz after line 5, I can first
+create a =Range= containing them:
+
+#+BEGIN_SRC jupyter-julia
+r_fbb = Range(f,from=Line(f,1),to=r"baz")
+#+END_SRC
+
+#+RESULTS:
+: # Out[45]:
+: : Range(1:3) #foo▿baz
+
+And append it to =r_new=. If you append to a =Range= the =value= is always
+appended after the last line of the =Range=.
+
+#+BEGIN_SRC jupyter-julia
+append!(r_new,r_fbb)
+#+END_SRC
+
+#+RESULTS:
+: # Out[47]:
+: : Range(6:8) #foo▿baz
+
+The file now looks like this
+#+BEGIN_SRC jupyter-julia
+f.data
+#+END_SRC
+
+#+RESULTS:
+#+begin_example
+# Out[48]:
+,#+BEGIN_EXAMPLE
+  8-element Array{String,1}:
+  "foo"
+  "bar"
+  "baz"
+  "line 4"
+  "line 5"
+  "foo"
+  "bar"
+  "baz"
+,#+END_EXAMPLE
+#+end_example
+*** Save a file
+
+To save a file the function =save(f::File,path::AbstractString)= can be
+used:
+
+#+BEGIN_SRC jupyter-julia
+save(f,"testfile_edited")
+#+END_SRC
+** Editing grouped datalines
+A common problem that this package can tackle is editing structured
+plain-text files.
+Assume we have the following file:
+#+BEGIN_SRC jupyter-julia :results none
+  open("teststructured","w") do f
+      write(f,join([
+          "* Header 01",
+          "1,2,3",
+          "2,3,1",
+          "10,3,1",
+          "2,55,1",
+          "8,3,1",
+          "* Header 02",
+          "1,2,3",
+          "2,3,1",
+          "10,3,1",
+          "2,55,1",
+          "8,3,1",
+          "* Header 03",
+          "1,2,3",
+          "2,55,1",
+          "8,3,1",
+      ],"\n"))
+  end
+#+END_SRC
+
+and want to replace the commas in the second data block with semicolons.
+At first we load the file:
+#+BEGIN_SRC jupyter-julia
+f = load("teststructured")
+#+END_SRC
+
+#+RESULTS:
+: # Out[54]:
+: : File(<Lines 16>,<Ref 0>)
+
+Then we obtain the second data block by using =Range= with =until=.
+
+#+BEGIN_SRC jupyter-julia
+data_re = r"\d+,\d+,\d+"
+data_range = Range(f,from=data_re,until=data_re,after=r"Header 02")
+#+END_SRC
+
+#+RESULTS:
+: # Out[59]:
+: : Range(8:12) #1,2,3▿8,3,1
+
+Like the =Line= function =Range= also supports =after= and =before= keywords.
+To assure we have the correct lines we print the value of =data_range=:
+
+#+BEGIN_SRC jupyter-julia :results output
+@show value(data_range)
+#+END_SRC
+
+#+RESULTS:
+: value(data_range) = ["1,2,3", "2,3,1", "10,3,1", "2,55,1", "8,3,1"]
+
+One way to now replace all commas with semicolons would be to generate a
+new string from =value= and replace the range. However, as this is a quite
+common task, =Range= has its own =map= and =map!= methods.
+
+#+BEGIN_SRC jupyter-julia :results none
+map!(data_range) do l
+    replace(l,","=>";")
+end
+#+END_SRC
+
+So the value now looks like this:
+
+#+BEGIN_SRC jupyter-julia
+value(data_range)
+#+END_SRC
+
+#+RESULTS:
+: # Out[68]:
+: #+BEGIN_EXAMPLE
+:   5-element Array{String,1}:
+:   "1;2;3"
+:   "2;3;1"
+:   "10;3;1"
+:   "2;55;1"
+:   "8;3;1"
+: #+END_EXAMPLE
+
+and also our file was updated:
+
+#+BEGIN_SRC jupyter-julia
+f.data
+#+END_SRC
+
+#+RESULTS:
+#+begin_example
+# Out[69]:
+,#+BEGIN_EXAMPLE
+  16-element Array{String,1}:
+  "* Header 01"
+  "1,2,3"
+  "2,3,1"
+  "10,3,1"
+  "2,55,1"
+  "8,3,1"
+  "* Header 02"
+  "1;2;3"
+  "2;3;1"
+  "10;3;1"
+  "2;55;1"
+  "8;3;1"
+  "* Header 03"
+  "1,2,3"
+  "2,55,1"
+  "8,3,1"
+,#+END_EXAMPLE
+#+end_example
