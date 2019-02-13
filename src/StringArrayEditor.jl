@@ -53,6 +53,11 @@ function load(path::AbstractString)
     return File(readlines(path))
 end
 
+"""
+    save(f::File,path::AbstractString)
+
+Save file `f` to `path`.
+"""
 function save(f::File,path::AbstractString)
     open(path,"w") do d
         for l in f.data
@@ -65,6 +70,11 @@ function show(io::IO,f::File)
     print(io,"File(<Lines $(length(f.data))>,<Ref $(length(f.references))>)")
 end
 
+"""
+    edit(f::File)
+
+Save `f` to a temporary file and open with `edit`.
+"""
 function edit(f::File)
     # Save file to tmp
     path,io = mktemp()
@@ -84,6 +94,11 @@ function writeToFile(io::IOStream,lines::Vector{String})
     end
 end
 
+"""
+    edit(r<:Reference)
+
+Save `r` to a temporary file and open with `edit`.
+"""
 function edit(r::T) where T<:Reference
     # Save file to tmp
     path,io = mktemp()

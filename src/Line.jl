@@ -1,3 +1,8 @@
+"""
+    Line(f::File,no::Int)
+
+Create a reference to line `no` in file `f`.
+"""
 mutable struct Line <: Reference
     file::Union{File,Nothing}
     ln::Union{Int,Nothing}
@@ -22,7 +27,17 @@ function show(io::IO,l::Line)
     end
 end
 
+"""
+    next(l::Line,i::Int=1)
+
+Returns the `i`-th line after `l`.
+"""
 @alive l next(l::Line,i::Int=1) = Line(l.file,l.ln+i)
+"""
+    prev(l::Line,i::Int=1)
+
+Returns the `i`-th line before `l`.
+"""
 @alive l prev(l::Line,i::Int=1) = Line(l.file,l.ln-i)
 
 +(l::Line,i::Int) = next(l,i)
@@ -30,11 +45,21 @@ end
 +(i::Int,l::Line) = next(l,i)
 -(i::Int,l::Line) = prev(l,i)
 
+"""
+    copy(l::Line)
+
+Create a copy of line `l`.
+"""
 @alive l copy(l::Line) = Line(l.file,l.ln)
 
 #=
 Delete functions
 =#
+"""
+    delete!(l::Line)
+
+Delete line `l` from the document it's in.
+"""
 @alive l function delete!(l::Line)
     deletefromreferences!(l.file,l)
     deleteat!(l.file.data,l.ln)
@@ -61,7 +86,11 @@ end
 #=
 Insert functions
 =#
+"""
+    insert!(l::Line,str::String)
 
+Insert `str` before line `l`.
+"""
 @alive l function insert!(l::Line,str::String)
     notify_insert(l.file,l,1)
     insert!(l.file.data,l.ln,str)
@@ -69,6 +98,12 @@ Insert functions
     return Line(l.file,l.ln-1)
 end
 
+
+"""
+    insert!(l::Line,from::Reference)
+
+Insert the value of reference `from` before line `l`.
+"""
 @alive l from insert!(l::Line,from::T) where T<:Reference = insert!(l,value(from))
 
 function notify_insert(self::Line,ins::Line,lines::Int)
@@ -81,6 +116,11 @@ end
 Append functions
 =#
 
+"""
+    append!(l::Line,str::String)
+
+Append `str` after line `l`.
+"""
 @alive l function append!(l::Line,str::String)
     notify_append(l.file,l,1)
     if l.ln < length(l.file.data)
@@ -91,6 +131,11 @@ Append functions
     return Line(l.file,l.ln+1)
 end
 
+"""
+    append!(l::Line,from::Reference)
+
+Append the value of reference `from` after line `l`.
+"""
 @alive l from append!(l::Line,from::T) where T<:Reference = append!(l,value(from))
 
 function notify_append(self::Line,app::Line,lines::Int)
@@ -103,11 +148,21 @@ end
 Replace functions
 =#
 
+"""
+    replace!(l::Line,str::String)
+
+Replace the value of line `l` with `str`
+"""
 @alive l function replace!(l::Line,str::String)
     l.file.data[l.ln] = str
     return l
 end
 
+"""
+    replace!(l::Line,from::Reference)
+
+Replace line `l` with the value of `from`
+"""
 @alive l from replace!(l::Line,from::T) where T<:Reference = replace!(l,value(from))
 
 function notify_replace(self::Line,rep::Line,lines::Int)
@@ -123,6 +178,11 @@ end
 movebeforeline(ref::Line) = ref.ln
 moveafterline(ref::Line) = ref.ln
 
+"""
+    move!(self::Line,to::T)
+
+Move `self` to `to`. This is a combination of `insert!(to,self)` and `delete!(self)`.
+"""
 @alive self to function move!(self::Line,to::T) where T<:Reference
     # Insert duplicate
     dup = insert!(to,self)
@@ -136,6 +196,11 @@ moveafterline(ref::Line) = ref.ln
     return self
 end
 
+"""
+    moveafter!(self::Line,to::T)
+
+Move `self` to the position after `to`. This is a combination of `append!(to,self)` and `delete!(self)`.
+"""
 @alive self to function moveafter!(self::Line,to::T) where T<:Reference
     # Insert duplicate
     dup = append!(to,self)
