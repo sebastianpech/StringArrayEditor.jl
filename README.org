@@ -6,7 +6,7 @@ using StringArrayEditor
 
 Create an example file
 
-#+BEGIN_SRC jupyter-julia :results none
+#+BEGIN_SRC jupyter-julia :results none :exports both
   open("testfile","w") do f
       write(f,join(["foo","bar","line 3", "line 4","line 3", "baz"],"\n"))
   end
@@ -14,7 +14,7 @@ Create an example file
 
 Load a files using the method =load=:
 
-#+BEGIN_SRC jupyter-julia
+#+BEGIN_SRC jupyter-julia :exports both
   f = load("testfile")
 #+END_SRC
 
@@ -27,7 +27,7 @@ Mistakenly the file contains two lines "line 3". In order to remove them
 multiple options are available.
 
 A line can be found by using the =Line= method with a regular expression.
-#+BEGIN_SRC jupyter-julia
+#+BEGIN_SRC jupyter-julia :exports both
 l = Line(f,r"line 3")
 #+END_SRC
 
@@ -46,7 +46,7 @@ functions.
 So if we want to find the second line we could do another search for
 "line 3" after =l=.
 
-#+BEGIN_SRC jupyter-julia
+#+BEGIN_SRC jupyter-julia :exports both
 l2 = Line(f,r"line 3",after=l)
 #+END_SRC
 
@@ -55,10 +55,10 @@ l2 = Line(f,r"line 3",after=l)
 : : Line(5) #line 3
 
 This now gives us the fifth line in the document. Alternatively if we
-are sure that the wrong line is for sure 2 lines below we can use the
-=next= function on our line =l=.
+are sure that the wrong line is 2 lines below we can use the =next=
+function on our line =l=.
 
-#+BEGIN_SRC jupyter-julia
+#+BEGIN_SRC jupyter-julia :exports both
 next(l,2)
 #+END_SRC
 
@@ -68,7 +68,7 @@ next(l,2)
 
 or
 
-#+BEGIN_SRC jupyter-julia
+#+BEGIN_SRC jupyter-julia :exports both
 l + 2
 #+END_SRC
 
@@ -79,7 +79,7 @@ l + 2
 We can also check if the line we found before matches the one we found
 with this alternative method:
 
-#+BEGIN_SRC jupyter-julia
+#+BEGIN_SRC jupyter-julia :exports both
 l2 == l+2
 #+END_SRC
 
@@ -92,7 +92,7 @@ Another very useful search method you can find in =Search.jl= is
 stopped after the first match, instead all matches in the document are
 returned:
 
-#+BEGIN_SRC jupyter-julia
+#+BEGIN_SRC jupyter-julia :exports both
 ls = Lines(f,r"line 3")
 #+END_SRC
 
@@ -113,7 +113,7 @@ contain a pointer to the file they reference which makes working with
 lines very convenient as the document they are in must not be declared
 in the call.
 
-#+BEGIN_SRC jupyter-julia
+#+BEGIN_SRC jupyter-julia :exports both
 delete!(l2)
 #+END_SRC
 
@@ -122,7 +122,7 @@ delete!(l2)
 
 The content of the file looks like this now:
 
-#+BEGIN_SRC jupyter-julia
+#+BEGIN_SRC jupyter-julia :exports both
 f.data
 #+END_SRC
 
@@ -140,7 +140,7 @@ f.data
 The reference to the line still exists, but is now marked as =Deleted= an
 cannot be used further:
 
-#+BEGIN_SRC jupyter-julia
+#+BEGIN_SRC jupyter-julia :exports both
 l2
 #+END_SRC
 
@@ -163,7 +163,7 @@ The methods all return the newly generated =References=.
 
 So for example to collect foo, bar and baz we can move baz up to line 3.
 
-#+BEGIN_SRC jupyter-julia
+#+BEGIN_SRC jupyter-julia :exports both
 baz = Line(f,r"baz")
 move!(baz,l)
 #+END_SRC
@@ -173,7 +173,7 @@ move!(baz,l)
 : : Line(3) #baz
 
 The content of the file looks like this now
-#+BEGIN_SRC jupyter-julia
+#+BEGIN_SRC jupyter-julia :exports both
 f.data
 #+END_SRC
 
@@ -192,7 +192,7 @@ Another nice thing about =StringArrayEditor= is that it resolves changes
 through line rearrangements. So our previous reference to the value line
 3 still points to the correct line though it has moved down
 
-#+BEGIN_SRC jupyter-julia
+#+BEGIN_SRC jupyter-julia :exports both
 l
 #+END_SRC
 
@@ -203,7 +203,7 @@ l
 Now line 3 is actually in line 4 and line 4 is actually in line 5. To
 solve this we use a =Range= and select all lines starting with line
 
-#+BEGIN_SRC jupyter-julia
+#+BEGIN_SRC jupyter-julia :exports both
 r = Range(f,from=r"line",until=r"line")
 #+END_SRC
 
@@ -218,7 +218,7 @@ If =until= is given starting from =to= as long as =until= matches the range is
 expanded.
 
 It would be possible to select the range with =from= and =to= using:
-#+BEGIN_SRC jupyter-julia
+#+BEGIN_SRC jupyter-julia :exports both
 r2 = Range(f,from=r"line",to=r"line 4")
 #+END_SRC
 
@@ -228,7 +228,7 @@ r2 = Range(f,from=r"line",to=r"line 4")
 
 We can test this by matching their values.
 
-#+BEGIN_SRC jupyter-julia
+#+BEGIN_SRC jupyter-julia :exports both
 r == r2
 #+END_SRC
 
@@ -239,7 +239,7 @@ r == r2
 It should be noted, that the value of every =Reference= can be obtained by
 using the =value= function
 
-#+BEGIN_SRC jupyter-julia :results output
+#+BEGIN_SRC jupyter-julia :results output :exports both
 @show value(r2)
 @show value(l)
 #+END_SRC
@@ -251,7 +251,7 @@ using the =value= function
 So to fix the mistake of the wrong numbering we can now replace the
 range with the correct line numbers:
 
-#+BEGIN_SRC jupyter-julia
+#+BEGIN_SRC jupyter-julia :exports both
 r_new = replace!(r,["line 4", "line 5"])
 #+END_SRC
 
@@ -260,7 +260,7 @@ r_new = replace!(r,["line 4", "line 5"])
 : : Range(4:5) #line 4▿line 5
 
 The file now looks like this
-#+BEGIN_SRC jupyter-julia
+#+BEGIN_SRC jupyter-julia :exports both
 f.data
 #+END_SRC
 
@@ -275,10 +275,10 @@ f.data
 :   "line 5"
 : #+END_EXAMPLE
 
-If i want to add a copy of foo, bar, baz after line 5, I can first
+If I want to add a copy of foo, bar, baz after line 5, I can first
 create a =Range= containing them:
 
-#+BEGIN_SRC jupyter-julia
+#+BEGIN_SRC jupyter-julia :exports both
 r_fbb = Range(f,from=Line(f,1),to=r"baz")
 #+END_SRC
 
@@ -289,7 +289,7 @@ r_fbb = Range(f,from=Line(f,1),to=r"baz")
 And append it to =r_new=. If you append to a =Range= the =value= is always
 appended after the last line of the =Range=.
 
-#+BEGIN_SRC jupyter-julia
+#+BEGIN_SRC jupyter-julia :exports both
 append!(r_new,r_fbb)
 #+END_SRC
 
@@ -298,7 +298,7 @@ append!(r_new,r_fbb)
 : : Range(6:8) #foo▿baz
 
 The file now looks like this
-#+BEGIN_SRC jupyter-julia
+#+BEGIN_SRC jupyter-julia :exports both
 f.data
 #+END_SRC
 
@@ -322,14 +322,14 @@ f.data
 To save a file the function =save(f::File,path::AbstractString)= can be
 used:
 
-#+BEGIN_SRC jupyter-julia
+#+BEGIN_SRC jupyter-julia :exports both
 save(f,"testfile_edited")
 #+END_SRC
 ** Editing grouped datalines
 A common problem that this package can tackle is editing structured
 plain-text files.
 Assume we have the following file:
-#+BEGIN_SRC jupyter-julia :results none
+#+BEGIN_SRC jupyter-julia :results none :exports both
   open("teststructured","w") do f
       write(f,join([
           "* Header 01",
@@ -354,29 +354,29 @@ Assume we have the following file:
 
 and want to replace the commas in the second data block with semicolons.
 At first we load the file:
-#+BEGIN_SRC jupyter-julia
+#+BEGIN_SRC jupyter-julia :exports both
 f = load("teststructured")
 #+END_SRC
 
 #+RESULTS:
-: # Out[54]:
+: # Out[72]:
 : : File(<Lines 16>,<Ref 0>)
 
 Then we obtain the second data block by using =Range= with =until=.
 
-#+BEGIN_SRC jupyter-julia
+#+BEGIN_SRC jupyter-julia :exports both
 data_re = r"\d+,\d+,\d+"
 data_range = Range(f,from=data_re,until=data_re,after=r"Header 02")
 #+END_SRC
 
 #+RESULTS:
-: # Out[59]:
+: # Out[73]:
 : : Range(8:12) #1,2,3▿8,3,1
 
 Like the =Line= function =Range= also supports =after= and =before= keywords.
 To assure we have the correct lines we print the value of =data_range=:
 
-#+BEGIN_SRC jupyter-julia :results output
+#+BEGIN_SRC jupyter-julia :results output :exports both
 @show value(data_range)
 #+END_SRC
 
@@ -387,7 +387,7 @@ One way to now replace all commas with semicolons would be to generate a
 new string from =value= and replace the range. However, as this is a quite
 common task, =Range= has its own =map= and =map!= methods.
 
-#+BEGIN_SRC jupyter-julia :results none
+#+BEGIN_SRC jupyter-julia :results none :exports both
 map!(data_range) do l
     replace(l,","=>";")
 end
@@ -395,7 +395,7 @@ end
 
 So the value now looks like this:
 
-#+BEGIN_SRC jupyter-julia
+#+BEGIN_SRC jupyter-julia :exports both
 value(data_range)
 #+END_SRC
 
@@ -412,7 +412,7 @@ value(data_range)
 
 and also our file was updated:
 
-#+BEGIN_SRC jupyter-julia
+#+BEGIN_SRC jupyter-julia :exports both
 f.data
 #+END_SRC
 
