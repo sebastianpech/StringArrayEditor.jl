@@ -1,5 +1,6 @@
 * StringArrayEditor
-[[https://travis-ci.org/sebastianpech/StringArrayEditor.jl.svg?branch=master)]]
+
+[[https://travis-ci.org/sebastianpech/StringArrayEditor.jl.svg?branch=master]]
 [[https://codecov.io/gh/sebastianpech/StringArrayEditor.jl/branch/master/graph/badge.svg]]
 [[https://coveralls.io/repos/github/sebastianpech/StringArrayEditor.jl/badge.svg?branch=master]]
 ** Simple textfile editing and searching
