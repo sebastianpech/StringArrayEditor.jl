@@ -15,7 +15,7 @@ Create an example file
   end
 #+END_SRC
 
-Load a files using the method =load=:
+Load a file using the method =load=:
 
 #+BEGIN_SRC jupyter-julia :exports both
   f = load("testfile")
