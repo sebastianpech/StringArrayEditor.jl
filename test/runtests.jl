@@ -142,10 +142,8 @@ using StringArrayEditor
         @test rbefore.from == 1
         @test rbefore.to == 2
         @test StringArrayEditor.isdestroyed(lafter)
-        @test StringArrayEditor.isdestroyed(rin)
-        @test StringArrayEditor.isdestroyed(rafter)
         @test length(rsurround) == 3
-        @test length(f.references) == 3
+        @test length(f.references) == 4
     end
     @testset "Insert Range" begin
         f = load("./data/testfile01.txt")
