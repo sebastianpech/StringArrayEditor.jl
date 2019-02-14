@@ -125,6 +125,8 @@ function Range(f::File;
         _to == nothing && error("To ($to) was not found in the file")
     elseif isa(to,Int)
         _to = _from + to
+    elseif isa(to,Line)
+        _to = to.ln
     elseif to != nothing
         _to = parseSpecifier(f,from,Val{:to}())
     else

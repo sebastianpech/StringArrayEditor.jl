@@ -345,4 +345,9 @@ end
     @test value(l) == "ASDF"
 
 end
+@testset "Range by lines" begin
+    f = load("./data/testfile01.txt")
+    r = Range(f,from=Line(f,1),to=Line(f,4))
+    @test value(r) == f.data[1:4]
+end
 end
