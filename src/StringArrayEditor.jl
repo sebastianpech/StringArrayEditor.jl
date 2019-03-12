@@ -19,7 +19,8 @@ export
     map,
     prev,
     next,
-    +,-
+    +,-,
+    peek
 
 import Base:show,delete!,insert!,copy,append!,==,length,iterate,getindex,lastindex,in,replace!,findfirst,findnext,map!,map,+,-
 
@@ -115,10 +116,12 @@ function notify_replace(f::File,rep::Reference,lines::Int)
     end
 end
 
-include("./misc.jl")
+@pre alive(self::T) where T<:Reference = isdestroyed(self) && error("Can't perform operation on deleted $T.")
+
 include("./Line.jl")
 include("./Range.jl")
 include("./Collection.jl")
 include("./Search.jl")
+include("./misc.jl")
 
 end

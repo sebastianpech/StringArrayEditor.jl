@@ -9,6 +9,3 @@ PrePostCall = "6a9148d9-5e9a-5935-86c8-72740ba3a7c7"
 
 [extras]
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
-
-[targets]
-test = ["Test"]

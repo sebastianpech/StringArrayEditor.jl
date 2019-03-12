@@ -1,3 +1,8 @@
+"""
+    Collection(ref::Vector{Reference})
+
+Wrapper type around all kind of Reference types. Is used to define special methods for vectors of references.
+"""
 mutable struct Collection <: Reference
     refs::Vector{Reference}
 end
